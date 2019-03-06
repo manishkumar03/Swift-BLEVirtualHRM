@@ -8,6 +8,10 @@
 
 import CoreBluetooth
 
+protocol BLEPeripheralManagerDelegate {
+  func BLEPeripheralManagerDidSendValue(_ heartRateBPM: UInt8)
+}
+
 /// CBUUID will automatically convert this 16-bit number to 128-bit UUID
 let heartRateServiceUUID = CBUUID(string: "0x180D")
 let heartRateCharacteristicUUID = CBUUID(string: "2A37")
@@ -17,6 +21,7 @@ class BLEPeripheralManager: NSObject, CBPeripheralManagerDelegate {
   private var heartRateService: CBMutableService!
   private var heartRateCharacteristic: CBMutableCharacteristic!
   private var notificationTimer: Timer!
+  var delegate: BLEPeripheralManagerDelegate?
 
   override init() {
     super.init()
@@ -102,6 +107,7 @@ class BLEPeripheralManager: NSObject, CBPeripheralManagerDelegate {
   /// value = (firstByte * 256^0) + (secondByte * 256^1) + (thirdByte * 256^2)... and so on.
   func calculateHeartRate() -> Data {
     let randomHeartRate = UInt8.random(in: 22...222)
+    self.delegate?.BLEPeripheralManagerDidSendValue(randomHeartRate)
     var heartRateBPM: [UInt8] = [0, randomHeartRate, 0, 0, 0, 0, 0, 0]
     let heartRateData = Data(bytes: &heartRateBPM, count: MemoryLayout.size(ofValue: heartRateBPM))
     return heartRateData
